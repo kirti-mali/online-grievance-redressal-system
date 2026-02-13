@@ -1,0 +1,48 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.layout-container {
+  display: flex;
+  flex: 1;
+  background-color: #f8f9fa;
+}
+
+.layout-sidebar {
+  width: 250px;
+  background-color: var(--dark-gray);
+  padding: 1.5rem 0;
+  overflow-y: auto;
+}
+
+.layout-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.layout-main.with-sidebar {
+  margin-left: 0;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .layout-sidebar {
+    display: none;
+  }
+
+  .content-wrapper {
+    padding: 1.5rem 1rem;
+  }
+}
