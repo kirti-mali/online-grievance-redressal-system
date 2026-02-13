@@ -1,0 +1,96 @@
+import React from 'react';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import Sidebar from '../../components/Sidebar';
+
+export const ManageUsers = () => {
+  return (
+    <>
+      <Header />
+      <div style={{ display: 'flex' }}>
+        <Sidebar role="admin" />
+        <main style={{ flex: 1, padding: '2rem' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h1>Manage Users</h1>
+            <div style={styles.card}>
+              <p>User management interface will appear here...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+export const ManageGrievances = () => {
+  return (
+    <>
+      <Header />
+      <div style={{ display: 'flex' }}>
+        <Sidebar role="admin" />
+        <main style={{ flex: 1, padding: '2rem' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h1>All Grievances</h1>
+            <div style={styles.card}>
+              <p>Grievance management interface will appear here...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+export const ManageCategories = () => {
+  return (
+    <>
+      <Header />
+      <div style={{ display: 'flex' }}>
+        <Sidebar role="admin" />
+        <main style={{ flex: 1, padding: '2rem' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h1>Manage Categories</h1>
+            <div style={styles.card}>
+              <p>Category management interface will appear here...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+export const Reports = () => {
+  return (
+    <>
+      <Header />
+      <div style={{ display: 'flex' }}>
+        <Sidebar role="admin" />
+        <main style={{ flex: 1, padding: '2rem' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            <h1>Reports & Analytics</h1>
+            <div style={styles.card}>
+              <p>Reports dashboard will appear here...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+const styles = {
+  card: {
+    background: 'white',
+    padding: '2rem',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    marginTop: '2rem'
+  }
+};
+
+export default ManageUsers;
