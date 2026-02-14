@@ -1,10 +1,9 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Sidebar from '../../components/Sidebar';
 import { AuthContext } from '../../context/AuthContext';
-import * as userService from '../../services/userService';
 import { toast } from 'react-toastify';
 
 const UserService = {
@@ -22,7 +21,7 @@ const UserService = {
 };
 
 const Profile = () => {
-  const { user, updateUser } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({

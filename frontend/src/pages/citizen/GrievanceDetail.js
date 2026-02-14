@@ -5,7 +5,6 @@ import Footer from '../../components/Footer';
 import Sidebar from '../../components/Sidebar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import * as grievanceService from '../../services/grievanceService';
-import * as resolutionService from '../../services/resolutionService';
 
 const GrievanceDetail = () => {
   const { id } = useParams();
@@ -14,6 +13,7 @@ const GrievanceDetail = () => {
 
   useEffect(() => {
     fetchGrievance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchGrievance = async () => {
