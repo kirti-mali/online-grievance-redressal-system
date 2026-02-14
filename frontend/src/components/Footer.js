@@ -36,9 +36,9 @@ const Footer = () => {
           <div className="footer-section">
             <h4>Follow Us</h4>
             <div className="social-links">
-              <a href="#" className="social-link">Facebook</a>
-              <a href="#" className="social-link">Twitter</a>
-              <a href="#" className="social-link">LinkedIn</a>
+              <button className="social-link" onClick={() => window.open('#', '_blank')}>Facebook</button>
+              <button className="social-link" onClick={() => window.open('#', '_blank')}>Twitter</button>
+              <button className="social-link" onClick={() => window.open('#', '_blank')}>LinkedIn</button>
             </div>
           </div>
         </div>
