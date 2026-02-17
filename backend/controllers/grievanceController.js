@@ -1,4 +1,10 @@
-const pool = require('../config/database');
+const db = require('../config/database');
+const mockDB = require('../config/mockDatabase');
+
+// Helper to check if using mock database
+const isMockMode = () => {
+  return typeof db.useMockDatabase === 'function' ? db.useMockDatabase() : false;
+};
 
 /**
  * Create new grievance
@@ -8,29 +14,55 @@ exports.createGrievance = async (req, res) => {
     const userId = req.user.id;
     const { title, description, category_id, priority } = req.body;
 
-    const conn = await pool.getConnection();
-
-    try {
-      const [result] = await conn.query(
-        'INSERT INTO grievances (user_id, title, description, category_id, priority) VALUES (?, ?, ?, ?, ?)',
-        [userId, title, description, category_id, priority]
-      );
-
+    if (isMockMode()) {
+      // Use mock database
+      const grievance = await mockDB.createGrievance(userId, title, description, category_id, priority);
+      
       res.status(201).json({
         success: true,
         message: 'Grievance created successfully',
         grievance: {
-          id: result.insertId,
-          user_id: userId,
-          title,
-          description,
-          category_id,
-          priority,
-          status: 'open'
+          id: grievance.id,
+          user_id: grievance.user_id,
+          title: grievance.title,
+          description: grievance.description,
+          category_id: grievance.category_id,
+          priority: grievance.priority,
+          status: grievance.status
         }
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
+
+      try {
+        const [result] = await conn.query(
+          'INSERT INTO grievances (user_id, title, description, category_id, priority) VALUES (?, ?, ?, ?, ?)',
+          [userId, title, description, category_id, priority]
+        );
+
+        // Record initial status history
+        await conn.query(
+          'INSERT INTO grievance_status_history (grievance_id, old_status, new_status, changed_by, reason) VALUES (?, ?, ?, ?, ?)',
+          [result.insertId, null, 'open', userId, 'Grievance created']
+        );
+
+        res.status(201).json({
+          success: true,
+          message: 'Grievance created successfully',
+          grievance: {
+            id: result.insertId,
+            user_id: userId,
+            title,
+            description,
+            category_id,
+            priority,
+            status: 'open'
+          }
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Create grievance error:', error);
@@ -129,40 +161,56 @@ exports.getUserGrievances = async (req, res) => {
     const userId = req.user.id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
 
-    const conn = await pool.getConnection();
-
-    try {
-      const [countResult] = await conn.query(
-        'SELECT COUNT(*) as total FROM grievances WHERE user_id = ?',
-        [userId]
-      );
-      const total = countResult[0].total;
-
-      const [grievances] = await conn.query(
-        `SELECT g.*, c.name as category_name, s.name as assigned_staff_name 
-         FROM grievances g
-         LEFT JOIN categories c ON g.category_id = c.id
-         LEFT JOIN users s ON g.assigned_to = s.id
-         WHERE g.user_id = ?
-         ORDER BY g.created_at DESC
-         LIMIT ? OFFSET ?`,
-        [userId, limit, offset]
-      );
-
+    if (isMockMode()) {
+      // Use mock database
+      const result = await mockDB.getUserGrievances(userId, page, limit);
       res.json({
         success: true,
-        data: grievances,
+        data: result.data,
         pagination: {
           page,
           limit,
-          total,
-          pages: Math.ceil(total / limit)
+          total: result.total,
+          pages: Math.ceil(result.total / limit)
         }
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const offset = (page - 1) * limit;
+      const conn = await db.getConnection();
+
+      try {
+        const [countResult] = await conn.query(
+          'SELECT COUNT(*) as total FROM grievances WHERE user_id = ?',
+          [userId]
+        );
+        const total = countResult[0].total;
+
+        const [grievances] = await conn.query(
+          `SELECT g.*, c.name as category_name, s.name as assigned_staff_name 
+           FROM grievances g
+           LEFT JOIN categories c ON g.category_id = c.id
+           LEFT JOIN users s ON g.assigned_to = s.id
+           WHERE g.user_id = ?
+           ORDER BY g.created_at DESC
+           LIMIT ? OFFSET ?`,
+          [userId, limit, offset]
+        );
+
+        res.json({
+          success: true,
+          data: grievances,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+          }
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Get user grievances error:', error);
@@ -180,44 +228,60 @@ exports.getGrievanceById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const conn = await pool.getConnection();
-
-    try {
-      const [grievances] = await conn.query(
-        `SELECT g.*, u.name as user_name, u.email as user_email, c.name as category_name,
-                s.name as assigned_staff_name FROM grievances g
-         LEFT JOIN users u ON g.user_id = u.id
-         LEFT JOIN categories c ON g.category_id = c.id
-         LEFT JOIN users s ON g.assigned_to = s.id
-         WHERE g.id = ?`,
-        [id]
-      );
-
-      if (grievances.length === 0) {
+    if (isMockMode()) {
+      // Use mock database
+      const grievance = await mockDB.getGrievanceById(parseInt(id));
+      if (!grievance) {
         return res.status(404).json({
           success: false,
           message: 'Grievance not found'
         });
       }
-
-      // Get resolutions
-      const [resolutions] = await conn.query(
-        `SELECT r.*, u.name as staff_name FROM resolutions r
-         LEFT JOIN users u ON r.staff_id = u.id
-         WHERE r.grievance_id = ?
-         ORDER BY r.created_at DESC`,
-        [id]
-      );
-
       res.json({
         success: true,
-        grievance: {
-          ...grievances[0],
-          resolutions: resolutions
-        }
+        grievance: grievance
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
+
+      try {
+        const [grievances] = await conn.query(
+          `SELECT g.*, u.name as user_name, u.email as user_email, c.name as category_name,
+                  s.name as assigned_staff_name FROM grievances g
+           LEFT JOIN users u ON g.user_id = u.id
+           LEFT JOIN categories c ON g.category_id = c.id
+           LEFT JOIN users s ON g.assigned_to = s.id
+           WHERE g.id = ?`,
+          [id]
+        );
+
+        if (grievances.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: 'Grievance not found'
+          });
+        }
+
+        // Get resolutions
+        const [resolutions] = await conn.query(
+          `SELECT r.*, u.name as staff_name FROM resolutions r
+           LEFT JOIN users u ON r.staff_id = u.id
+           WHERE r.grievance_id = ?
+           ORDER BY r.created_at DESC`,
+          [id]
+        );
+
+        res.json({
+          success: true,
+          grievance: {
+            ...grievances[0],
+            resolutions: resolutions
+          }
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Get grievance error:', error);
@@ -259,9 +323,18 @@ exports.updateGrievanceStatus = async (req, res) => {
         });
       }
 
+      // Get current status for history
+      const [current] = await conn.query('SELECT status FROM grievances WHERE id = ?', [id]);
+      const oldStatus = current[0].status;
+
+      await conn.query('UPDATE grievances SET status = ? WHERE id = ?', [status, id]);
+
+      // Insert into status history
+      const changedBy = req.user.id;
+      const reason = req.body.reason || null;
       await conn.query(
-        'UPDATE grievances SET status = ? WHERE id = ?',
-        [status, id]
+        'INSERT INTO grievance_status_history (grievance_id, old_status, new_status, changed_by, reason) VALUES (?, ?, ?, ?, ?)',
+        [id, oldStatus, status, changedBy, reason]
       );
 
       res.json({
@@ -322,6 +395,14 @@ exports.assignGrievance = async (req, res) => {
       await conn.query(
         'UPDATE grievances SET assigned_to = ? WHERE id = ?',
         [assigned_to, id]
+      );
+
+      // Insert into status history to record assignment action
+      const changedBy = req.user.id;
+      const reason = `Assigned to user ${assigned_to}`;
+      await conn.query(
+        'INSERT INTO grievance_status_history (grievance_id, old_status, new_status, changed_by, reason) VALUES (?, ?, ?, ?, ?)',
+        [id, null, null, changedBy, reason]
       );
 
       res.json({

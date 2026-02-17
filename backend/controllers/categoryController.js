@@ -1,23 +1,39 @@
-const pool = require('../config/database');
+const db = require('../config/database');
+const mockDB = require('../config/mockDatabase');
+
+// Helper to check if using mock database
+const isMockMode = () => {
+  return typeof db.useMockDatabase === 'function' ? db.useMockDatabase() : false;
+};
 
 /**
  * Get all categories
  */
 exports.getAllCategories = async (req, res) => {
   try {
-    const conn = await pool.getConnection();
-
-    try {
-      const [categories] = await conn.query(
-        'SELECT * FROM categories ORDER BY name ASC'
-      );
-
+    if (isMockMode()) {
+      // Use mock database
+      const categories = await mockDB.getAllCategories();
       res.json({
         success: true,
         data: categories
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
+
+      try {
+        const [categories] = await conn.query(
+          'SELECT * FROM categories ORDER BY name ASC'
+        );
+
+        res.json({
+          success: true,
+          data: categories
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Get categories error:', error);
@@ -34,27 +50,44 @@ exports.getAllCategories = async (req, res) => {
 exports.getCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
-    const conn = await pool.getConnection();
-
-    try {
-      const [categories] = await conn.query(
-        'SELECT * FROM categories WHERE id = ?',
-        [id]
-      );
-
-      if (categories.length === 0) {
+    
+    if (isMockMode()) {
+      // Use mock database
+      const category = await mockDB.getCategoryById(parseInt(id));
+      if (!category) {
         return res.status(404).json({
           success: false,
           message: 'Category not found'
         });
       }
-
       res.json({
         success: true,
-        category: categories[0]
+        data: category
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
+
+      try {
+        const [categories] = await conn.query(
+          'SELECT * FROM categories WHERE id = ?',
+          [id]
+        );
+
+        if (categories.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: 'Category not found'
+          });
+        }
+
+        res.json({
+          success: true,
+          data: categories[0]
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Get category error:', error);

@@ -45,3 +45,54 @@ export const getStaffGrievances = (page = 1, limit = 10) => {
     params: { page, limit }
   });
 };
+
+// Get grievance comments
+export const getComments = (grievanceId) => {
+  return apiClient.get(`/comments/grievance/${grievanceId}`);
+};
+
+// Add comment to grievance
+export const addComment = (grievanceId, commentData) => {
+  return apiClient.post(`/comments/grievance/${grievanceId}`, commentData);
+};
+
+// Get grievance documents
+export const getDocuments = (grievanceId) => {
+  return apiClient.get(`/documents/grievance/${grievanceId}`);
+};
+
+// Upload document
+export const uploadDocument = (grievanceId, formData) => {
+  return apiClient.post(`/documents/upload/${grievanceId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+};
+
+// Download document
+export const downloadDocument = (documentId) => {
+  return apiClient.get(`/documents/download/${documentId}`, {
+    responseType: 'blob'
+  });
+};
+
+// Delete document
+export const deleteDocument = (documentId) => {
+  return apiClient.delete(`/documents/${documentId}`);
+};
+
+// Get grievance status history
+export const getStatusHistory = (grievanceId) => {
+  return apiClient.get(`/status-history/grievance/${grievanceId}`);
+};
+
+// Get all staff members
+export const getStaffMembers = () => {
+  return apiClient.get('/users/staff');
+};
+
+// Get categories
+export const getCategories = () => {
+  return apiClient.get('/categories');
+};

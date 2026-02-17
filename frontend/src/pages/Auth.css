@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #2980b9 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
   padding: 1rem;
 }
 
@@ -74,8 +74,8 @@
 }
 
 .demo-credentials {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
+  background-color: rgba(255,183,3,0.12);
+  border: 1px solid rgba(255,183,3,0.24);
   border-radius: 4px;
   padding: 1rem;
   margin-top: 1.5rem;
@@ -84,13 +84,13 @@
 
 .demo-credentials p {
   margin: 0.25rem 0;
-  color: #856404;
+  color: var(--warning-color-dark);
 }
 
 .demo-credentials strong {
   display: block;
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--text-color);
 }
 
 @media (max-width: 480px) {
