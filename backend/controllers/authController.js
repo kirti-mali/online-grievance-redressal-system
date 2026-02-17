@@ -1,6 +1,12 @@
-const pool = require('../config/database');
+const db = require('../config/database');
+const mockDB = require('../config/mockDatabase');
 const { hashPassword, comparePassword } = require('../utils/passwordUtils');
 const { generateToken } = require('../utils/tokenUtils');
+
+// Helper to check if using mock database
+const isMockMode = () => {
+  return typeof db.useMockDatabase === 'function' ? db.useMockDatabase() : false;
+};
 
 /**
  * Register new user
@@ -8,47 +14,74 @@ const { generateToken } = require('../utils/tokenUtils');
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    const conn = await pool.getConnection();
 
-    try {
-      // Check if user already exists
-      const [existingUser] = await conn.query(
-        'SELECT id FROM users WHERE email = ?',
-        [email]
-      );
+    // Hash password
+    const hashedPassword = await hashPassword(password);
 
-      if (existingUser.length > 0) {
+    if (isMockMode()) {
+      // Use mock database
+      try {
+        const newUser = await mockDB.addUser(name, email, hashedPassword, role);
+        const token = generateToken(newUser.id, role);
+
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          token: token,
+          user: {
+            id: newUser.id,
+            name,
+            email,
+            role
+          }
+        });
+      } catch (mockError) {
         return res.status(400).json({
           success: false,
-          message: 'Email already registered'
+          message: mockError.message
         });
       }
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
 
-      // Hash password
-      const hashedPassword = await hashPassword(password);
+      try {
+        // Check if user already exists
+        const [existingUser] = await conn.query(
+          'SELECT id FROM users WHERE email = ?',
+          [email]
+        );
 
-      // Insert new user
-      const [result] = await conn.query(
-        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-        [name, email, hashedPassword, role]
-      );
-
-      // Generate token
-      const token = generateToken(result.insertId, role);
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        token: token,
-        user: {
-          id: result.insertId,
-          name,
-          email,
-          role
+        if (existingUser.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Email already registered'
+          });
         }
-      });
-    } finally {
-      conn.release();
+
+        // Insert new user
+        const [result] = await conn.query(
+          'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+          [name, email, hashedPassword, role]
+        );
+
+        // Generate token
+        const token = generateToken(result.insertId, role);
+
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          token: token,
+          user: {
+            id: result.insertId,
+            name,
+            email,
+            role
+          }
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Registration error:', error);
@@ -66,23 +99,17 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const conn = await pool.getConnection();
 
-    try {
-      // Find user by email
-      const [users] = await conn.query(
-        'SELECT id, name, email, password, role FROM users WHERE email = ?',
-        [email]
-      );
+    if (isMockMode()) {
+      // Use mock database
+      const user = await mockDB.findUserByEmail(email);
 
-      if (users.length === 0) {
+      if (!user) {
         return res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
       }
-
-      const user = users[0];
 
       // Verify password
       const isPasswordValid = await comparePassword(password, user.password);
@@ -107,8 +134,52 @@ exports.login = async (req, res) => {
           role: user.role
         }
       });
-    } finally {
-      conn.release();
+    } else {
+      // Use real database
+      const conn = await db.getConnection();
+
+      try {
+        // Find user by email
+        const [users] = await conn.query(
+          'SELECT id, name, email, password, role FROM users WHERE email = ?',
+          [email]
+        );
+
+        if (users.length === 0) {
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+
+        const user = users[0];
+
+        // Verify password
+        const isPasswordValid = await comparePassword(password, user.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({
+            success: false,
+            message: 'Invalid email or password'
+          });
+        }
+
+        // Generate token
+        const token = generateToken(user.id, user.role);
+
+        res.json({
+          success: true,
+          message: 'Login successful',
+          token: token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          }
+        });
+      } finally {
+        conn.release();
+      }
     }
   } catch (error) {
     console.error('Login error:', error);

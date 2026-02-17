@@ -35,43 +35,95 @@ const Home = () => {
           </div>
         </section>
 
+        <section className="how-it-works-section">
+          <h2>How It Works - Simple 4 Steps</h2>
+          <p className="section-subtitle">File and resolve your grievances in minutes</p>
+          <div className="steps-container">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <div className="step-icon">📝</div>
+              <h3>Register & Login</h3>
+              <p>Create your account in seconds. Choose your role (Citizen, Staff, or Admin) and get started.</p>
+            </div>
+
+            <div className="step-arrow">→</div>
+
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <div className="step-icon">📋</div>
+              <h3>Submit Complaint</h3>
+              <p>Fill out a simple form with your complaint details, select category, priority, and attach documents.</p>
+            </div>
+
+            <div className="step-arrow">→</div>
+
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <div className="step-icon">🔍</div>
+              <h3>Track Progress</h3>
+              <p>Monitor your complaint status in real-time. Get notifications on updates and staff responses.</p>
+            </div>
+
+            <div className="step-arrow">→</div>
+
+            <div className="step-card">
+              <div className="step-number">4</div>
+              <div className="step-icon">✅</div>
+              <h3>Get Resolution</h3>
+              <p>Receive resolution from our dedicated staff. Provide feedback and close the complaint.</p>
+            </div>
+          </div>
+        </section>
+
         <section className="features-section">
-          <h2>Key Features</h2>
+          <h2>Powerful Features</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">📝</div>
-              <h3>Easy Filing</h3>
-              <p>File complaints with just a few clicks. Categorize issues and set priority levels.</p>
+              <div className="feature-icon">💬</div>
+              <h3>Comments & Discussion</h3>
+              <p>Communicate with staff through comments. Add internal notes and track conversations.</p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🔍</div>
-              <h3>Real-time Tracking</h3>
-              <p>Track your grievance status in real-time. Get instant updates on progress.</p>
+              <div className="feature-icon">📤</div>
+              <h3>Escalation System</h3>
+              <p>Escalate unresolved complaints to higher authorities with detailed reasons.</p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">👥</div>
-              <h3>Dedicated Support</h3>
-              <p>Our staff members work to resolve your grievances efficiently.</p>
+              <div className="feature-icon">⭐</div>
+              <h3>Feedback & Ratings</h3>
+              <p>Rate resolved complaints and provide feedback to improve service quality.</p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon">🔔</div>
+              <h3>Smart Notifications</h3>
+              <p>Get instant notifications for status changes, comments, and important updates.</p>
+            </div>
+
+            <div className="feature-card">
+              <div className="feature-icon">📎</div>
+              <h3>Document Management</h3>
+              <p>Upload and manage supporting documents. Download evidence and attachments anytime.</p>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h3>Analytics & Reports</h3>
-              <p>Comprehensive reports and analytics for better decision making.</p>
+              <h3>Status History</h3>
+              <p>Complete audit trail of all status changes with timestamps and responsible users.</p>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">🔒</div>
               <h3>Secure & Private</h3>
-              <p>Your data is protected with enterprise-grade security.</p>
+              <p>Your data is protected with JWT authentication and enterprise-grade security.</p>
             </div>
 
             <div className="feature-card">
               <div className="feature-icon">⚡</div>
-              <h3>Fast Resolution</h3>
-              <p>Optimized workflow ensures quick resolution of grievances.</p>
+              <h3>Fast & Responsive</h3>
+              <p>Lightning-fast performance with real-time updates and smooth user experience.</p>
             </div>
           </div>
         </section>

@@ -64,11 +64,41 @@ const validateResolution = [
   handleValidationErrors
 ];
 
+/**
+ * Validation rules for adding comment
+ */
+const validateComment = [
+  body('comment').trim().notEmpty().withMessage('Comment cannot be empty'),
+  body('is_internal').optional().isBoolean().withMessage('is_internal must be boolean'),
+  handleValidationErrors
+];
+
+/**
+ * Validation rules for escalating grievance
+ */
+const validateEscalation = [
+  body('reason').trim().notEmpty().withMessage('Escalation reason is required'),
+  body('escalated_to').optional().isInt().withMessage('escalated_to must be a user ID'),
+  handleValidationErrors
+];
+
+/**
+ * Validation rules for feedback submission
+ */
+const validateFeedback = [
+  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
+  body('comment').optional().trim(),
+  handleValidationErrors
+];
+
 module.exports = {
   handleValidationErrors,
   validateRegister,
   validateLogin,
   validateGrievance,
   validateCategory,
-  validateResolution
+  validateResolution,
+  validateComment,
+  validateEscalation,
+  validateFeedback
 };
