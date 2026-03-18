@@ -9,6 +9,7 @@ const categories = [];
 const comments = [];
 const statusHistory = [];
 const documents = [];
+const complaints = [];
 
 let userIdCounter = 1;
 let grievanceIdCounter = 1;
@@ -16,6 +17,7 @@ let categoryIdCounter = 1;
 let commentIdCounter = 1;
 let statusHistoryIdCounter = 1;
 let documentIdCounter = 1;
+let complaintIdCounter = 1;
 
 // Default categories
 const defaultCategories = [
@@ -30,6 +32,19 @@ const defaultCategories = [
 defaultCategories.forEach(cat => {
   categories.push({ ...cat, created_at: new Date() });
   categoryIdCounter = Math.max(categoryIdCounter, cat.id) + 1;
+});
+
+// Seed default admin user (password: admin123)
+// bcrypt hash of "admin123"
+const bcrypt = require('bcryptjs');
+const adminHash = bcrypt.hashSync('admin123', 10);
+users.push({
+  id: userIdCounter++,
+  name: 'Admin',
+  email: 'admin@gmail.com',
+  password: adminHash,
+  role: 'admin',
+  createdAt: new Date()
 });
 
 const mockDB = {
@@ -245,6 +260,48 @@ const mockDB = {
     return documents.filter(d => d.grievance_id === grievanceId);
   },
 
+  // ===== COMPLAINTS =====
+  createComplaint: async (title, description, createdBy, status = 'Pending', assignedTo = null) => {
+    const complaint = {
+      id: complaintIdCounter++,
+      title,
+      description,
+      status,
+      createdBy,
+      assignedTo,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    complaints.push(complaint);
+    return complaint;
+  },
+
+  getAllComplaints: async () => {
+    return complaints;
+  },
+
+  getComplaintById: async (id) => {
+    return complaints.find(c => c.id === parseInt(id)) || null;
+  },
+
+  updateComplaint: async (id, updates) => {
+    const complaint = complaints.find(c => c.id === parseInt(id));
+    if (!complaint) {
+      throw new Error('Complaint not found');
+    }
+    Object.assign(complaint, updates, { updatedAt: new Date() });
+    return complaint;
+  },
+
+  deleteComplaint: async (id) => {
+    const index = complaints.findIndex(c => c.id === parseInt(id));
+    if (index > -1) {
+      complaints.splice(index, 1);
+      return true;
+    }
+    return false;
+  },
+
   // ===== UTILITY =====
   clear: () => {
     users.length = 0;
@@ -252,12 +309,14 @@ const mockDB = {
     comments.length = 0;
     statusHistory.length = 0;
     documents.length = 0;
+    complaints.length = 0;
     userIdCounter = 1;
     grievanceIdCounter = 1;
     categoryIdCounter = defaultCategories.length + 1;
     commentIdCounter = 1;
     statusHistoryIdCounter = 1;
     documentIdCounter = 1;
+    complaintIdCounter = 1;
     
     // Reinitialize default categories
     categories.length = 0;

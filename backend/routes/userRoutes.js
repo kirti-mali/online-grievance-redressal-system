@@ -9,8 +9,12 @@ router.use(authenticateToken);
 // Update own profile
 router.put('/profile', userController.updateProfile);
 
+// Get staff list (accessible by admin)
+router.get('/staff', authorizeRole('admin'), userController.getStaffUsers);
+
 // Admin routes - manage users
 router.get('/', authorizeRole('admin'), userController.getAllUsers);
+router.post('/', authorizeRole('admin'), userController.createUser);
 router.get('/:id', authorizeRole('admin'), userController.getUserById);
 router.put('/:id', authorizeRole('admin'), userController.updateUser);
 router.delete('/:id', authorizeRole('admin'), userController.deleteUser);

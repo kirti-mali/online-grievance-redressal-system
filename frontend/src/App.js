@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 // Protective Route
 import ProtectedRoute from './ProtectedRoute';
@@ -18,6 +19,7 @@ import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import Complaints from './pages/Complaints';
+import ComplaintPage from './pages/ComplaintPage';
 
 // Citizen Pages
 import CitizenDashboard from './pages/citizen/Dashboard';
@@ -44,11 +46,15 @@ import ManageUsers from './pages/admin/ManageUsers';
 import ManageGrievances from './pages/admin/ManageGrievances';
 import ManageCategories from './pages/admin/ManageCategories';
 import Reports from './pages/admin/Reports';
-import Settings from './pages/admin/Settings';
+import AdminSettings from './pages/admin/Settings';
 
 // New Admin Components
 import AdminManageComplaints from './pages/admin/AdminManageComplaints';
 import ComplaintHistory from './pages/admin/ComplaintHistory';
+
+// Settings Page
+import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 
 // Styles
 import './styles/App.css';
@@ -57,6 +63,7 @@ import './styles/Complaints.css';
 const App = () => {
   return (
     <Router>
+      <LanguageProvider>
       <AuthProvider>
         <ToastContainer
           position="top-right"
@@ -86,7 +93,7 @@ const App = () => {
             path="/complaints" 
             element={
               <ProtectedRoute>
-                <Complaints />
+                <ComplaintPage />
               </ProtectedRoute>
             } 
           />
@@ -238,7 +245,7 @@ const App = () => {
             path="/admin/settings" 
             element={
               <ProtectedRoute requiredRoles={['admin']}>
-                <Settings />
+                <AdminSettings />
               </ProtectedRoute>
             } 
           />
@@ -271,10 +278,15 @@ const App = () => {
             } 
           />
 
+          {/* Settings - Available to all authenticated users */}
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
+      </LanguageProvider>
     </Router>
   );
 };

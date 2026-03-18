@@ -2,6 +2,54 @@ const pool = require('../config/database');
 const { hashPassword } = require('../utils/passwordUtils');
 
 /**
+ * Get staff users list (for assignment dropdown)
+ */
+exports.getStaffUsers = async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    try {
+      const [staff] = await conn.query(
+        'SELECT id, name, email FROM users WHERE role = "staff" AND is_active = 1 ORDER BY name ASC'
+      );
+      res.json({ success: true, data: staff });
+    } finally {
+      conn.release();
+    }
+  } catch (error) {
+    console.error('Get staff error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch staff' });
+  }
+};
+
+/**
+ * Create user (admin)
+ */
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email, password, role, phone } = req.body;
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ success: false, message: 'Name, email, password and role are required' });
+    }
+    const conn = await pool.getConnection();
+    try {
+      const [existing] = await conn.query('SELECT id FROM users WHERE email = ?', [email]);
+      if (existing.length > 0) return res.status(400).json({ success: false, message: 'Email already registered' });
+      const hashed = await hashPassword(password);
+      const [result] = await conn.query(
+        'INSERT INTO users (name, email, password, role, phone) VALUES (?, ?, ?, ?, ?)',
+        [name, email, hashed, role, phone || null]
+      );
+      res.status(201).json({ success: true, message: 'User created successfully', user: { id: result.insertId, name, email, role } });
+    } finally {
+      conn.release();
+    }
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ success: false, message: 'Failed to create user' });
+  }
+};
+
+/**
  * Get all users with pagination
  */
 exports.getAllUsers = async (req, res) => {

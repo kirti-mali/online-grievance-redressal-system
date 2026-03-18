@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Nav, Alert } from 'react-bootstrap';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import * as grievanceService from '../../services/grievanceService';
 
 const Performance = () => {
@@ -69,15 +67,15 @@ const Performance = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role="staff" />
-        <main style={{ flex: 1 }}>
-          <Container fluid className="py-4">
-            {/* Header */}
-            <Row className="mb-4">
-              <Col>
+    <RedesignedMainLayout role="staff">
+      <Container fluid className="py-4" style={{ maxWidth: '1200px', margin: '0 auto', paddingLeft: '24px', paddingRight: '24px' }}>
+        <div style={{ marginBottom: '32px', borderBottom: '2px solid #dadce0', paddingBottom: '24px' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 500 }}>⚡ Performance Metrics</h1>
+          <p style={{ margin: 0, color: '#5f6368', fontSize: '14px' }}>Track your grievance resolution performance and metrics</p>
+        </div>
+
+        <Row className="mb-4">
+          <Col>
                 <h2 className="mb-2">📊 My Performance & Task Management</h2>
                 <p className="text-muted">Track your assigned grievances and resolution metrics</p>
               </Col>
@@ -114,7 +112,7 @@ const Performance = () => {
                   <Card.Body className="text-center">
                     <h3 className="mb-2">{stats.resolved}</h3>
                     <p className="mb-0">Resolved</p>
-                  </Card.Body>
+                  </Card.Body>9
                 </Card>
               </Col>
               <Col md={6} lg={4} className="mb-3">
@@ -196,11 +194,8 @@ const Performance = () => {
                 </Card>
               </Col>
             </Row>
-          </Container>
-        </main>
-      </div>
-      <Footer />
-    </>
+        </Container>
+    </RedesignedMainLayout>
   );
 };
 

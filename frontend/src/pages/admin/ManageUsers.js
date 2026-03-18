@@ -1,314 +1,184 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Modal, Form, InputGroup, Row, Col, Card, Pagination, Badge } from 'react-bootstrap';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
-import MainLayout from '../../layouts/MainLayout';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
+import * as userService from '../../services/userService';
+import { toast } from 'react-toastify';
+
+const roleColor = { admin: '#e53935', staff: '#f57c00', citizen: '#1a73e8' };
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    role: 'citizen',
-    phone: '',
-    address: ''
-  });
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [selected, setSelected] = useState(null);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'citizen', phone: '' });
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const mockUsers = [
-        { id: 1, name: 'Admin User', email: 'admin@grievance.com', role: 'admin', phone: '5551234567', created_at: '2026-01-01' },
-        { id: 2, name: 'John Citizen', email: 'john@example.com', role: 'citizen', phone: '5551111111', created_at: '2026-01-05' },
-        { id: 3, name: 'Jane Staff', email: 'staff1@grievance.com', role: 'staff', phone: '5552222222', created_at: '2026-01-10' },
-        { id: 4, name: 'Bob Smith', email: 'bob@example.com', role: 'citizen', phone: '5553333333', created_at: '2026-01-15' },
-      ];
-      setUsers(mockUsers);
-    } catch (error) {
-      setMessage({ type: 'danger', text: 'Failed to fetch users' });
+      const res = await userService.getAllUsers(1, 100);
+      setUsers(res.data.data || []);
+    } catch {
+      toast.error('Failed to fetch users');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = users.filter(u =>
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const totalPages = Math.ceil(filteredUsers.length / pageSize);
-
-  const handleAddClick = () => {
+  const openAdd = () => {
     setModalMode('add');
-    setSelectedUser(null);
-    setFormData({ name: '', email: '', role: 'citizen', phone: '', address: '' });
+    setSelected(null);
+    setForm({ name: '', email: '', password: '', role: 'citizen', phone: '' });
     setShowModal(true);
   };
 
-  const handleEditClick = (user) => {
+  const openEdit = (u) => {
     setModalMode('edit');
-    setSelectedUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone || '',
-      address: user.address || ''
-    });
+    setSelected(u);
+    setForm({ name: u.name, email: u.email, password: '', role: u.role, phone: u.phone || '' });
     setShowModal(true);
   };
 
-  const handleDeleteClick = (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(u => u.id !== userId));
-      setMessage({ type: 'success', text: 'User deleted successfully' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this user?')) return;
+    try {
+      await userService.deleteUser(id);
+      setUsers(users.filter(u => u.id !== id));
+      toast.success('User deleted');
+    } catch {
+      toast.error('Failed to delete user');
     }
   };
 
-  const handleSave = () => {
-    if (!formData.name || !formData.email) {
-      setMessage({ type: 'danger', text: 'Name and email are required' });
-      return;
+  const handleSave = async () => {
+    if (!form.name || !form.email) return toast.error('Name and email required');
+    if (modalMode === 'add' && !form.password) return toast.error('Password required');
+    setSaving(true);
+    try {
+      if (modalMode === 'add') {
+        await userService.createUser(form);
+        toast.success('User created');
+      } else {
+        const update = { name: form.name, email: form.email, role: form.role, phone: form.phone };
+        await userService.updateUser(selected.id, update);
+        toast.success('User updated');
+      }
+      setShowModal(false);
+      fetchUsers();
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to save user');
+    } finally {
+      setSaving(false);
     }
-
-    if (modalMode === 'add') {
-      const newUser = {
-        id: Math.max(...users.map(u => u.id), 0) + 1,
-        ...formData,
-        created_at: new Date().toISOString().split('T')[0]
-      };
-      setUsers([...users, newUser]);
-      setMessage({ type: 'success', text: 'User added successfully' });
-    } else {
-      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
-      setMessage({ type: 'success', text: 'User updated successfully' });
-    }
-    
-    setShowModal(false);
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  };
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
-    <MainLayout role="admin">
-      <Sidebar role="admin" />
-      <Container fluid className="py-4">
-        <Row className="mb-4">
-          <Col>
-            <h2 className="mb-2">👥 Manage Users</h2>
-            <p className="text-muted">Add, edit, delete, and search users</p>
-          </Col>
-          <Col className="text-end">
-            <Button variant="success" size="lg" onClick={handleAddClick}>
-              ➕ Add New User
-            </Button>
-          </Col>
-        </Row>
-
-        {message.text && (
-          <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
-            {message.text}
-            <button type="button" className="btn-close" onClick={() => setMessage({ type: '', text: '' })}></button>
+    <RedesignedMainLayout role="admin">
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ marginBottom: '24px', borderBottom: '2px solid #dadce0', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 500 }}>👥 Manage Users</h1>
+            <p style={{ margin: '4px 0 0', color: '#5f6368', fontSize: '14px' }}>Create, edit and manage system users</p>
           </div>
-        )}
+          <button onClick={openAdd} style={btn('#1a73e8')}>+ Add User</button>
+        </div>
 
-        <Card className="mb-4">
-          <Card.Body>
-            <InputGroup>
-              <InputGroup.Text>🔍</InputGroup.Text>
-              <Form.Control
-                placeholder="Search by name or email..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </InputGroup>
-          </Card.Body>
-        </Card>
+        <input
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ width: '100%', padding: '10px 14px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' }}
+        />
 
-        <Card className="shadow-sm">
-          <Card.Body className="p-0">
-            <Table hover responsive className="mb-0">
-              <thead className="table-light">
+        {loading ? <p>Loading...</p> : (
+          <div style={{ background: 'white', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: '#f8f9fa' }}>
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Phone</th>
-                  <th>Joined</th>
-                  <th className="text-center">Actions</th>
+                  {['ID', 'Name', 'Email', 'Role', 'Phone', 'Joined', 'Actions'].map(h => (
+                    <th key={h} style={th}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4">Loading...</td>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: '#5f6368' }}>No users found</td></tr>
+                ) : filtered.map(u => (
+                  <tr key={u.id} style={{ borderTop: '1px solid #f1f3f4' }}>
+                    <td style={td}>{u.id}</td>
+                    <td style={td}>{u.name}</td>
+                    <td style={td}>{u.email}</td>
+                    <td style={td}>
+                      <span style={{ background: roleColor[u.role] || '#666', color: 'white', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>
+                        {u.role?.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={td}>{u.phone || '-'}</td>
+                    <td style={td}>{u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                    <td style={td}>
+                      <button onClick={() => openEdit(u)} style={btn('#1a73e8', '6px 12px', '12px')}>Edit</button>
+                      <button onClick={() => handleDelete(u.id)} style={{ ...btn('#e53935', '6px 12px', '12px'), marginLeft: '8px' }}>Delete</button>
+                    </td>
                   </tr>
-                ) : paginatedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="text-center py-4 text-muted">No users found</td>
-                  </tr>
-                ) : (
-                  paginatedUsers.map(user => (
-                    <tr key={user.id}>
-                      <td className="fw-bold">{user.id}</td>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <Badge bg={user.role === 'admin' ? 'danger' : user.role === 'staff' ? 'warning' : 'info'}>
-                          {user.role.toUpperCase()}
-                        </Badge>
-                      </td>
-                      <td>{user.phone || '-'}</td>
-                      <td>{user.created_at}</td>
-                      <td className="text-center">
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="me-2"
-                          onClick={() => handleEditClick(user)}
-                        >
-                          ✏️ Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDeleteClick(user.id)}
-                        >
-                          🗑️ Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
-            </Table>
-          </Card.Body>
-        </Card>
-
-        {totalPages > 1 && (
-          <div className="d-flex justify-content-center mt-4">
-            <Pagination>
-              <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
-              <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
-                  {page}
-                </Pagination.Item>
-              ))}
-              <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
-              <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
-            </Pagination>
+            </table>
           </div>
         )}
-      </Container>
+      </div>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalMode === 'add' ? '➕ Add New User' : '✏️ Edit User'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Full Name *</Form.Label>
-              <Form.Control
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleFormChange}
-                placeholder="Enter full name"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Email *</Form.Label>
-              <Form.Control
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleFormChange}
-                placeholder="Enter email"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Role *</Form.Label>
-              <Form.Select
-                name="role"
-                value={formData.role}
-                onChange={handleFormChange}
-              >
+      {showModal && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h2 style={{ margin: '0 0 20px', fontSize: '20px' }}>{modalMode === 'add' ? '➕ Add User' : '✏️ Edit User'}</h2>
+            {[
+              { label: 'Full Name *', key: 'name', type: 'text' },
+              { label: 'Email *', key: 'email', type: 'email' },
+              ...(modalMode === 'add' ? [{ label: 'Password *', key: 'password', type: 'password' }] : []),
+              { label: 'Phone', key: 'phone', type: 'tel' },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>{f.label}</label>
+                <input type={f.type} value={form[f.key]} onChange={e => setForm({ ...form, [f.key]: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+            ))}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '4px' }}>Role *</label>
+              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px' }}>
                 <option value="citizen">Citizen</option>
                 <option value="staff">Staff</option>
                 <option value="admin">Admin</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleFormChange}
-                placeholder="Enter phone number"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="address"
-                value={formData.address}
-                onChange={handleFormChange}
-                placeholder="Enter address"
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {modalMode === 'add' ? 'Add User' : 'Update User'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Footer />
-    </MainLayout>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowModal(false)} style={btn('#5f6368')}>Cancel</button>
+              <button onClick={handleSave} disabled={saving} style={btn('#1a73e8')}>{saving ? 'Saving...' : 'Save'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </RedesignedMainLayout>
   );
 };
+
+const btn = (bg, padding = '8px 18px', fontSize = '14px') => ({
+  background: bg, color: 'white', border: 'none', borderRadius: '6px',
+  padding, fontSize, cursor: 'pointer', fontWeight: 500
+});
+const th = { padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: '#5f6368' };
+const td = { padding: '12px 16px', fontSize: '14px' };
+const overlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
+const modal = { background: 'white', borderRadius: '10px', padding: '28px', width: '460px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' };
 
 export default ManageUsers;

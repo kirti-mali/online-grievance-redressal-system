@@ -56,14 +56,9 @@ export const addComment = (grievanceId, commentData) => {
   return apiClient.post(`/comments/grievance/${grievanceId}`, commentData);
 };
 
-// Get grievance documents
-export const getDocuments = (grievanceId) => {
-  return apiClient.get(`/documents/grievance/${grievanceId}`);
-};
-
 // Upload document
 export const uploadDocument = (grievanceId, formData) => {
-  return apiClient.post(`/documents/upload/${grievanceId}`, formData, {
+  return apiClient.post(`/documents/${grievanceId}/upload`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -72,9 +67,14 @@ export const uploadDocument = (grievanceId, formData) => {
 
 // Download document
 export const downloadDocument = (documentId) => {
-  return apiClient.get(`/documents/download/${documentId}`, {
+  return apiClient.get(`/documents/${documentId}/download`, {
     responseType: 'blob'
   });
+};
+
+// Get grievance documents
+export const getDocuments = (grievanceId) => {
+  return apiClient.get(`/documents/${grievanceId}/list`);
 };
 
 // Delete document

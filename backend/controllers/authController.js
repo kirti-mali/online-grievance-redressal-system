@@ -1,12 +1,6 @@
-const db = require('../config/database');
-const mockDB = require('../config/mockDatabase');
+const pool = require('../config/database');
 const { hashPassword, comparePassword } = require('../utils/passwordUtils');
 const { generateToken } = require('../utils/tokenUtils');
-
-// Helper to check if using mock database
-const isMockMode = () => {
-  return typeof db.useMockDatabase === 'function' ? db.useMockDatabase() : false;
-};
 
 /**
  * Register new user
@@ -14,74 +8,29 @@ const isMockMode = () => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-
-    // Hash password
     const hashedPassword = await hashPassword(password);
+    const conn = await pool.getConnection();
 
-    if (isMockMode()) {
-      // Use mock database
-      try {
-        const newUser = await mockDB.addUser(name, email, hashedPassword, role);
-        const token = generateToken(newUser.id, role);
-
-        res.status(201).json({
-          success: true,
-          message: 'User registered successfully',
-          token: token,
-          user: {
-            id: newUser.id,
-            name,
-            email,
-            role
-          }
-        });
-      } catch (mockError) {
-        return res.status(400).json({
-          success: false,
-          message: mockError.message
-        });
+    try {
+      const [existing] = await conn.query('SELECT id FROM users WHERE email = ?', [email]);
+      if (existing.length > 0) {
+        return res.status(400).json({ success: false, message: 'Email already registered' });
       }
-    } else {
-      // Use real database
-      const conn = await db.getConnection();
 
-      try {
-        // Check if user already exists
-        const [existingUser] = await conn.query(
-          'SELECT id FROM users WHERE email = ?',
-          [email]
-        );
+      const [result] = await conn.query(
+        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+        [name, email, hashedPassword, role || 'user']
+      );
 
-        if (existingUser.length > 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'Email already registered'
-          });
-        }
-
-        // Insert new user
-        const [result] = await conn.query(
-          'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-          [name, email, hashedPassword, role]
-        );
-
-        // Generate token
-        const token = generateToken(result.insertId, role);
-
-        res.status(201).json({
-          success: true,
-          message: 'User registered successfully',
-          token: token,
-          user: {
-            id: result.insertId,
-            name,
-            email,
-            role
-          }
-        });
-      } finally {
-        conn.release();
-      }
+      const token = generateToken(result.insertId, role || 'user');
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        token,
+        user: { id: result.insertId, name, email, role: role || 'user' }
+      });
+    } finally {
+      conn.release();
     }
   } catch (error) {
     console.error('Registration error:', error);
@@ -99,87 +48,33 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const conn = await pool.getConnection();
 
-    if (isMockMode()) {
-      // Use mock database
-      const user = await mockDB.findUserByEmail(email);
+    try {
+      const [users] = await conn.query(
+        'SELECT id, name, email, password, role FROM users WHERE email = ?',
+        [email]
+      );
 
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
+      if (users.length === 0) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }
 
-      // Verify password
+      const user = users[0];
       const isPasswordValid = await comparePassword(password, user.password);
       if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
       }
 
-      // Generate token
       const token = generateToken(user.id, user.role);
-
       res.json({
         success: true,
         message: 'Login successful',
-        token: token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        }
+        token,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role }
       });
-    } else {
-      // Use real database
-      const conn = await db.getConnection();
-
-      try {
-        // Find user by email
-        const [users] = await conn.query(
-          'SELECT id, name, email, password, role FROM users WHERE email = ?',
-          [email]
-        );
-
-        if (users.length === 0) {
-          return res.status(401).json({
-            success: false,
-            message: 'Invalid email or password'
-          });
-        }
-
-        const user = users[0];
-
-        // Verify password
-        const isPasswordValid = await comparePassword(password, user.password);
-        if (!isPasswordValid) {
-          return res.status(401).json({
-            success: false,
-            message: 'Invalid email or password'
-          });
-        }
-
-        // Generate token
-        const token = generateToken(user.id, user.role);
-
-        res.json({
-          success: true,
-          message: 'Login successful',
-          token: token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
-          }
-        });
-      } finally {
-        conn.release();
-      }
+    } finally {
+      conn.release();
     }
   } catch (error) {
     console.error('Login error:', error);
@@ -192,7 +87,7 @@ exports.login = async (req, res) => {
 };
 
 /**
- * Forgot Password (Simulation - sends reset link in response)
+ * Forgot Password
  */
 exports.forgotPassword = async (req, res) => {
   try {
@@ -200,38 +95,24 @@ exports.forgotPassword = async (req, res) => {
     const conn = await pool.getConnection();
 
     try {
-      // Check if user exists
-      const [users] = await conn.query(
-        'SELECT id, email FROM users WHERE email = ?',
-        [email]
-      );
+      const [users] = await conn.query('SELECT id, email FROM users WHERE email = ?', [email]);
 
       if (users.length === 0) {
-        return res.json({
-          success: true,
-          message: 'If an account exists with that email, you will receive a password reset link'
-        });
+        return res.json({ success: true, message: 'If an account exists with that email, you will receive a password reset link' });
       }
 
-      // Generate reset token
       const resetToken = generateToken(users[0].id, 'reset');
-
-      // In production, send email. For now, return token in response
       res.json({
         success: true,
         message: 'Password reset link sent to email',
-        resetToken: resetToken // This should be sent via email in production
+        resetToken
       });
     } finally {
       conn.release();
     }
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to process request',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(500).json({ success: false, message: 'Failed to process request' });
   }
 };
 
@@ -243,41 +124,22 @@ exports.resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
     const { verifyToken } = require('../utils/tokenUtils');
 
-    // Verify token
     const decoded = verifyToken(token);
     if (decoded.role !== 'reset') {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid reset token'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid reset token' });
     }
 
     const conn = await pool.getConnection();
-
     try {
-      // Hash new password
       const hashedPassword = await hashPassword(newPassword);
-
-      // Update user password
-      await conn.query(
-        'UPDATE users SET password = ? WHERE id = ?',
-        [hashedPassword, decoded.id]
-      );
-
-      res.json({
-        success: true,
-        message: 'Password reset successful'
-      });
+      await conn.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, decoded.id]);
+      res.json({ success: true, message: 'Password reset successful' });
     } finally {
       conn.release();
     }
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(400).json({
-      success: false,
-      message: 'Failed to reset password',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(400).json({ success: false, message: 'Failed to reset password' });
   }
 };
 
@@ -286,34 +148,23 @@ exports.resetPassword = async (req, res) => {
  */
 exports.getCurrentUser = async (req, res) => {
   try {
-    const userId = req.user.id;
     const conn = await pool.getConnection();
-
     try {
       const [users] = await conn.query(
         'SELECT id, name, email, role, phone, address, created_at FROM users WHERE id = ?',
-        [userId]
+        [req.user.id]
       );
 
       if (users.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found'
-        });
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      res.json({
-        success: true,
-        user: users[0]
-      });
+      res.json({ success: true, user: users[0] });
     } finally {
       conn.release();
     }
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch user data'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch user data' });
   }
 };

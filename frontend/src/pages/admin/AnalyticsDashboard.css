@@ -1,0 +1,179 @@
+.stat-card-modern {
+  border: none;
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card-modern:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stat-card-modern.total {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.stat-card-modern.open {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.stat-card-modern.progress {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.stat-card-modern.resolved {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.stat-card-modern .stat-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card-modern h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.stat-card-modern p {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.chart-container {
+  padding: 1rem 0;
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bar-item {
+  display: grid;
+  grid-template-columns: 120px 1fr 60px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.bar-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.bar-wrapper {
+  background: #f0f0f0;
+  border-radius: 8px;
+  height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: width 0.5s ease;
+  min-width: 40px;
+}
+
+.bar-open {
+  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+}
+
+.bar-progress {
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bar-resolved {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.bar-closed {
+  background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%);
+  color: #333;
+}
+
+.bar-high {
+  background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+.bar-medium {
+  background: linear-gradient(90deg, #feca57 0%, #ff9ff3 100%);
+}
+
+.bar-low {
+  background: linear-gradient(90deg, #48dbfb 0%, #0abde3 100%);
+}
+
+.bar-percentage {
+  font-weight: 600;
+  color: #666;
+  text-align: right;
+}
+
+.metric-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.metric-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.metric-card h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0.5rem 0;
+}
+
+.metric-card p {
+  color: #666;
+  margin: 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .bar-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .bar-label {
+    font-size: 0.9rem;
+  }
+
+  .bar-percentage {
+    text-align: left;
+  }
+
+  .stat-card-modern h3 {
+    font-size: 2rem;
+  }
+
+  .metric-card h3 {
+    font-size: 1.5rem;
+  }
+}

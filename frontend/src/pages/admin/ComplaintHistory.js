@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as grievanceService from '../../services/grievanceService';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import '../Auth.css';
 
 const ComplaintHistory = () => {
@@ -65,9 +66,12 @@ const ComplaintHistory = () => {
   };
 
   return (
-    <div className="history-container">
-      <div className="history-header">
-        <h2>📊 Complaint History & Analytics</h2>
+    <RedesignedMainLayout>
+      <div className="history-container">
+        <div style={{ marginBottom: '32px', borderBottom: '2px solid #dadce0', paddingBottom: '24px' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 500 }}>📊 Complaint History & Analytics</h1>
+          <p style={{ margin: 0, color: '#5f6368', fontSize: '14px' }}>View complaint activity and trends over time</p>
+        </div>
         <div className="timeframe-selector">
           <button
             className={`timeframe-btn ${timeframe === 'all' ? 'active' : ''}`}
@@ -88,7 +92,6 @@ const ComplaintHistory = () => {
             Last 30 Days
           </button>
         </div>
-      </div>
 
       {/* Statistics Cards */}
       {statistics && (
@@ -167,6 +170,7 @@ const ComplaintHistory = () => {
         )}
       </div>
     </div>
+    </RedesignedMainLayout>
   );
 };
 

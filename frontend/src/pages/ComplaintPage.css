@@ -1,0 +1,69 @@
+.complaint-page {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.page-title {
+  font-size: 2rem;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.complaint-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 500px;
+  margin: 0 auto 20px;
+}
+
+.form-input, .form-textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.form-button {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.form-button:hover {
+  background-color: #0056b3;
+}
+
+.complaint-list {
+  list-style: none;
+  padding: 0;
+}
+
+.complaint-item {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+.complaint-title {
+  font-size: 1.2rem;
+  color: #007bff;
+}
+
+.complaint-description {
+  font-size: 1rem;
+  color: #555;
+}
+
+.complaint-status {
+  font-size: 0.9rem;
+  color: #888;
+}

@@ -1,8 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import { AuthContext } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -75,153 +73,259 @@ const Profile = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role={user?.role} />
-        <main style={{ flex: 1, padding: '2rem' }}>
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <h1>My Profile</h1>
+    <RedesignedMainLayout role={user?.role}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '32px', borderBottom: '2px solid #dadce0', paddingBottom: '24px' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 500 }}>My Profile</h1>
+          <p style={{ margin: 0, color: '#5f6368', fontSize: '14px' }}>Manage your account information</p>
+        </div>
 
-            <div style={styles.card}>
-              <form onSubmit={handleSubmit}>
-                <div style={styles.section}>
-                  <h3>Basic Information</h3>
-                  
-                  <div style={styles.formGroup}>
-                    <label>Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          {/* Basic Information */}
+          <div style={{ backgroundColor: '#f8f9fa', padding: '24px', borderRadius: '8px', border: '1px solid #dadce0' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 600, color: '#202124' }}>
+              Basic Information
+            </h2>
 
-                  <div style={styles.formGroup}>
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      value={user?.email}
-                      disabled
-                      style={{ background: '#f5f5f5' }}
-                    />
-                  </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
 
-                  <div style={styles.formGroup}>
-                    <label>Role</label>
-                    <input
-                      type="text"
-                      value={user?.role}
-                      disabled
-                      style={{ background: '#f5f5f5' }}
-                    />
-                  </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={user?.email}
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#f8f9fa',
+                    color: '#5f6368',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
 
-                  <div style={styles.formGroup}>
-                    <label>Phone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Role
+                </label>
+                <input
+                  type="text"
+                  value={user?.role}
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#f8f9fa',
+                    color: '#5f6368',
+                    fontFamily: 'inherit',
+                    textTransform: 'capitalize'
+                  }}
+                />
+              </div>
 
-                  <div style={styles.formGroup}>
-                    <label>Address</label>
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
 
-                <div style={styles.section}>
-                  <h3>Change Password (Optional)</h3>
-
-                  <div style={styles.formGroup}>
-                    <label>Current Password</label>
-                    <input
-                      type="password"
-                      name="currentPassword"
-                      value={formData.currentPassword}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label>New Password</label>
-                    <input
-                      type="password"
-                      name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label>Confirm Password</label>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-
-                <div style={styles.buttonGroup}>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => navigate(`/${user?.role}/dashboard`)}
-                    style={{ background: '#95a5a6', color: 'white' }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Address
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </main>
-      </div>
-      <Footer />
-    </>
-  );
-};
 
-const styles = {
-  card: {
-    background: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    marginTop: '2rem'
-  },
-  section: {
-    marginBottom: '2rem',
-    paddingBottom: '2rem',
-    borderBottom: '1px solid #eee'
-  },
-  formGroup: {
-    marginBottom: '1.5rem'
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '2rem'
-  }
+          {/* Change Password */}
+          <div style={{ backgroundColor: '#f8f9fa', padding: '24px', borderRadius: '8px', border: '1px solid #dadce0' }}>
+            <h2 style={{ margin: '0 0 16px 0', fontSize: '20px', fontWeight: 600, color: '#202124' }}>
+              Change Password (Optional)
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={formData.currentPassword}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#202124', fontSize: '14px' }}>
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid #dadce0',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#202124',
+                    fontFamily: 'inherit'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '12px', paddingTop: '16px' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: '#1a73e8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                transition: 'all 0.2s ease',
+                opacity: loading ? 0.6 : 1
+              }}
+              onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#1565c0')}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = '#1a73e8')}
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/${user?.role}/dashboard`)}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: 'transparent',
+                color: '#1a73e8',
+                border: '1px solid #1a73e8',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = 'rgba(26, 115, 232, 0.08)')}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = 'transparent')}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </RedesignedMainLayout>
+  );
 };
 
 export default Profile;

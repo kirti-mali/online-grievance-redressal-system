@@ -7,7 +7,7 @@ const { authenticateToken, authorizeRole } = require('../middleware/auth');
 router.use(authenticateToken);
 
 // Get status history for grievance
-router.get('/:grievance_id/history', statusHistoryController.getStatusHistory);
+router.get('/grievance/:grievance_id', statusHistoryController.getStatusHistory);
 
 // Get status change statistics (admin)
 router.get('/stats/all', authorizeRole('admin'), statusHistoryController.getStatusStatistics);

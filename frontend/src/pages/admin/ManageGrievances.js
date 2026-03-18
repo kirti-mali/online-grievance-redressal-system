@@ -1,303 +1,183 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Modal, Form, InputGroup, Row, Col, Card, Pagination, Badge } from 'react-bootstrap';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
-import MainLayout from '../../layouts/MainLayout';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import * as grievanceService from '../../services/grievanceService';
+import * as userService from '../../services/userService';
+import { toast } from 'react-toastify';
+
+const statusColors = { open: '#e53935', in_progress: '#f57c00', resolved: '#2e7d32', closed: '#757575' };
+const priorityColors = { high: '#e53935', medium: '#f57c00', low: '#2e7d32' };
 
 const ManageGrievances = () => {
   const [grievances, setGrievances] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [selected, setSelected] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('view');
-  const [selectedGrievance, setSelectedGrievance] = useState(null);
-  const [formData, setFormData] = useState({
-    status: 'open',
-    assigned_to: '',
-    priority: 'medium'
-  });
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [form, setForm] = useState({ status: '', assigned_to: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchGrievances();
+    fetchAll();
   }, []);
 
-  const fetchGrievances = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true);
-      const response = await grievanceService.getAllGrievances();
-      setGrievances(response.data?.data || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching grievances:', error);
-      setMessage({ type: 'danger', text: 'Failed to fetch grievances' });
+      const [gRes, sRes] = await Promise.all([
+        grievanceService.getAllGrievances(1, 100),
+        userService.getStaffUsers()
+      ]);
+      setGrievances(gRes.data.data || []);
+      setStaff(sRes.data.data || []);
+    } catch {
+      toast.error('Failed to load data');
+    } finally {
       setLoading(false);
     }
   };
 
-  const filteredGrievances = grievances.filter(g =>
-    (g.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    g.user_name?.toLowerCase().includes(searchTerm.toLowerCase())) ?? false
-  );
+  const filtered = grievances.filter(g => {
+    const matchSearch = !search ||
+      g.title?.toLowerCase().includes(search.toLowerCase()) ||
+      g.user_name?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !filterStatus || g.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
-  const paginatedGrievances = filteredGrievances.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const totalPages = Math.ceil(filteredGrievances.length / pageSize);
-
-  const handleViewClick = (grievance) => {
-    setModalMode('view');
-    setSelectedGrievance(grievance);
-    setFormData({
-      status: grievance.status,
-      assigned_to: grievance.assigned_to || '',
-      priority: grievance.priority
-    });
+  const openModal = (g) => {
+    setSelected(g);
+    setForm({ status: g.status, assigned_to: g.assigned_to || '' });
     setShowModal(true);
-  };
-
-  const handleEditClick = (grievance) => {
-    setModalMode('edit');
-    setSelectedGrievance(grievance);
-    setFormData({
-      status: grievance.status,
-      assigned_to: grievance.assigned_to || '',
-      priority: grievance.priority
-    });
-    setShowModal(true);
-  };
-
-  const handleDeleteClick = (id) => {
-    if (window.confirm('Are you sure you want to delete this grievance?')) {
-      setGrievances(grievances.filter(g => g.id !== id));
-      setMessage({ type: 'success', text: 'Grievance deleted successfully' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    }
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
-      if (modalMode === 'edit') {
-        if (formData.status !== selectedGrievance.status) {
-          await grievanceService.updateGrievanceStatus(selectedGrievance.id, formData.status);
-        }
-        
-        setGrievances(grievances.map(g =>
-          g.id === selectedGrievance.id ? { ...g, ...formData } : g
-        ));
-        setMessage({ type: 'success', text: 'Grievance updated successfully' });
+      if (form.status !== selected.status) {
+        await grievanceService.updateGrievanceStatus(selected.id, form.status);
       }
+      if (form.assigned_to !== (selected.assigned_to || '')) {
+        await grievanceService.assignGrievance(selected.id, form.assigned_to || null);
+      }
+      toast.success('Grievance updated');
       setShowModal(false);
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      console.error('Error saving grievance:', error);
-      setMessage({ type: 'danger', text: 'Failed to update grievance' });
+      fetchAll();
+    } catch {
+      toast.error('Failed to update grievance');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'open': 'danger',
-      'in_progress': 'warning',
-      'resolved': 'success',
-      'closed': 'secondary'
-    };
-    return colors[status] || 'secondary';
-  };
-
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role="admin" />
-        <main style={{ flex: 1 }}>
-          <Container fluid className="py-4">
-            <Row className="mb-4">
-              <Col>
-                <h2 className="mb-2">📋 Manage Grievances</h2>
-                <p className="text-muted">View, edit, and manage all grievances</p>
-              </Col>
-            </Row>
+    <RedesignedMainLayout role="admin">
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ marginBottom: '24px', borderBottom: '2px solid #dadce0', paddingBottom: '20px' }}>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 500 }}>📋 Manage Grievances</h1>
+          <p style={{ margin: '4px 0 0', color: '#5f6368', fontSize: '14px' }}>View, assign and update all complaints</p>
+        </div>
 
-            {message.text && (
-              <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
-                {message.text}
-                <button type="button" className="btn-close" onClick={() => setMessage({ type: '', text: '' })}></button>
-              </div>
-            )}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <input placeholder="Search title or citizen..." value={search} onChange={e => setSearch(e.target.value)}
+            style={{ flex: 1, minWidth: '200px', padding: '10px 14px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px' }} />
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding: '10px 14px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px' }}>
+            <option value="">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
 
-            <Card className="mb-4">
-              <Card.Body>
-                <InputGroup>
-                  <InputGroup.Text>🔍</InputGroup.Text>
-                  <Form.Control
-                    placeholder="Search by title or citizen name..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </InputGroup>
-              </Card.Body>
-            </Card>
-
-            <Card className="shadow-sm">
-              <Card.Body className="p-0">
-                <Table hover responsive className="mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>ID</th>
-                      <th>Title</th>
-                      <th>Citizen</th>
-                      <th>Category</th>
-                      <th>Status</th>
-                      <th>Priority</th>
-                      <th>Assigned To</th>
-                      <th className="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="8" className="text-center py-4">Loading...</td>
-                      </tr>
-                    ) : paginatedGrievances.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" className="text-center py-4 text-muted">No grievances found</td>
-                      </tr>
-                    ) : (
-                      paginatedGrievances.map(grievance => (
-                        <tr key={grievance.id}>
-                          <td className="fw-bold">{grievance.id}</td>
-                          <td>{grievance.title?.substring(0, 20)}...</td>
-                          <td>{grievance.user_name}</td>
-                          <td>{grievance.category_name}</td>
-                          <td>
-                            <Badge bg={getStatusColor(grievance.status)}>
-                              {grievance.status?.replace('_', ' ').toUpperCase()}
-                            </Badge>
-                          </td>
-                          <td>
-                            <Badge bg={grievance.priority === 'high' ? 'danger' : grievance.priority === 'medium' ? 'warning' : 'info'}>
-                              {grievance.priority?.toUpperCase()}
-                            </Badge>
-                          </td>
-                          <td>{grievance.assigned_staff_name || 'Unassigned'}</td>
-                          <td className="text-center">
-                            <Button variant="info" size="sm" className="me-2" onClick={() => handleViewClick(grievance)}>
-                              👁️ View
-                            </Button>
-                            <Button variant="primary" size="sm" className="me-2" onClick={() => handleEditClick(grievance)}>
-                              ✏️ Edit
-                            </Button>
-                            <Button variant="danger" size="sm" onClick={() => handleDeleteClick(grievance.id)}>
-                              🗑️
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </Card.Body>
-            </Card>
-
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center mt-4">
-                <Pagination>
-                  <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
-                  <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
-                      {page}
-                    </Pagination.Item>
+        {loading ? <p>Loading...</p> : (
+          <div style={{ background: 'white', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: '#f8f9fa' }}>
+                <tr>
+                  {['ID', 'Title', 'Citizen', 'Category', 'Priority', 'Status', 'Assigned To', 'Date', 'Action'].map(h => (
+                    <th key={h} style={th}>{h}</th>
                   ))}
-                  <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
-                  <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
-                </Pagination>
-              </div>
-            )}
-          </Container>
-        </main>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan="9" style={{ textAlign: 'center', padding: '32px', color: '#5f6368' }}>No grievances found</td></tr>
+                ) : filtered.map(g => (
+                  <tr key={g.id} style={{ borderTop: '1px solid #f1f3f4' }}>
+                    <td style={td}>#{g.id}</td>
+                    <td style={{ ...td, maxWidth: '180px' }}>{g.title}</td>
+                    <td style={td}>{g.user_name || '-'}</td>
+                    <td style={td}>{g.category_name || '-'}</td>
+                    <td style={td}>
+                      <span style={badge(priorityColors[g.priority])}>{g.priority}</span>
+                    </td>
+                    <td style={td}>
+                      <span style={badge(statusColors[g.status])}>{g.status?.replace('_', ' ')}</span>
+                    </td>
+                    <td style={td}>{g.assigned_staff_name || <span style={{ color: '#aaa' }}>Unassigned</span>}</td>
+                    <td style={td}>{new Date(g.created_at).toLocaleDateString()}</td>
+                    <td style={td}>
+                      <button onClick={() => openModal(g)} style={btnStyle('#1a73e8')}>Manage</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalMode === 'view' ? '👁️ View Grievance' : '✏️ Edit Grievance'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedGrievance && (
-            <Form>
-              <Form.Group className="mb-3">
-                <Form.Label><strong>Title</strong></Form.Label>
-                <Form.Control type="text" value={selectedGrievance.title} disabled />
-              </Form.Group>
+      {showModal && selected && (
+        <div style={overlay}>
+          <div style={modalStyle}>
+            <h2 style={{ margin: '0 0 4px', fontSize: '20px' }}>Manage Grievance #{selected.id}</h2>
+            <p style={{ margin: '0 0 20px', color: '#5f6368', fontSize: '14px' }}>{selected.title}</p>
 
-              <Form.Group className="mb-3">
-                <Form.Label><strong>Description</strong></Form.Label>
-                <Form.Control as="textarea" rows={3} value={selectedGrievance.description} disabled />
-              </Form.Group>
+            <div style={{ background: '#f8f9fa', padding: '14px', borderRadius: '6px', marginBottom: '20px', fontSize: '14px' }}>
+              <p style={{ margin: '0 0 6px' }}><strong>Citizen:</strong> {selected.user_name} ({selected.user_email})</p>
+              <p style={{ margin: '0 0 6px' }}><strong>Category:</strong> {selected.category_name}</p>
+              <p style={{ margin: 0 }}><strong>Description:</strong> {selected.description}</p>
+            </div>
 
-              <Form.Group className="mb-3">
-                <Form.Label><strong>Status</strong></Form.Label>
-                <Form.Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleFormChange}
-                  disabled={modalMode === 'view'}
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </Form.Select>
-              </Form.Group>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Update Status</label>
+              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={selectStyle}>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
 
-              <Form.Group className="mb-3">
-                <Form.Label><strong>Priority</strong></Form.Label>
-                <Form.Select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleFormChange}
-                  disabled={modalMode === 'view'}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </Form.Select>
-              </Form.Group>
-            </Form>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
-          </Button>
-          {modalMode === 'edit' && (
-            <Button variant="primary" onClick={handleSave}>
-              Update Grievance
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={labelStyle}>Assign to Staff</label>
+              <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })} style={selectStyle}>
+                <option value="">-- Unassigned --</option>
+                {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
 
-      <Footer />
-    </>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowModal(false)} style={btnStyle('#5f6368')}>Cancel</button>
+              <button onClick={handleSave} disabled={saving} style={btnStyle('#1a73e8')}>{saving ? 'Saving...' : 'Save Changes'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </RedesignedMainLayout>
   );
 };
+
+const badge = (bg) => ({ background: bg, color: 'white', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600, textTransform: 'capitalize' });
+const btnStyle = (bg) => ({ background: bg, color: 'white', border: 'none', borderRadius: '6px', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: 500 });
+const th = { padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: '#5f6368', whiteSpace: 'nowrap' };
+const td = { padding: '12px 16px', fontSize: '14px', verticalAlign: 'middle' };
+const overlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
+const modalStyle = { background: 'white', borderRadius: '10px', padding: '28px', width: '520px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' };
+const labelStyle = { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' };
+const selectStyle = { width: '100%', padding: '9px 12px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px' };
 
 export default ManageGrievances;

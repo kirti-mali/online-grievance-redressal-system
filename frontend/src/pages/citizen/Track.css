@@ -1,0 +1,205 @@
+.track-page { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+.track-search-box {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.track-search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.track-search-row input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+}
+
+.track-search-row input:focus { border-color: #1a73e8; }
+
+.track-search-row button {
+  padding: 10px 20px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .track-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .track-grid { grid-template-columns: 1fr; }
+  .track-search-row { flex-direction: column; }
+  .track-search-row button { width: 100%; }
+}
+
+.track-card {
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.track-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.track-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.track-card-id { font-size: 12px; color: #9aa0a6; margin-bottom: 4px; }
+.track-card-title { font-size: 15px; font-weight: 600; color: #202124; line-height: 1.3; }
+
+.track-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.track-progress-wrap { margin-bottom: 4px; }
+.track-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #5f6368;
+  margin-bottom: 5px;
+}
+.track-progress-bar {
+  background: #f1f3f4;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+.track-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.track-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-top: 1px solid #f1f3f4;
+  padding-top: 12px;
+  font-size: 13px;
+}
+
+.track-meta-label { color: #9aa0a6; font-size: 11px; margin-bottom: 2px; }
+.track-meta-value { font-weight: 600; color: #3c4043; }
+
+.track-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f3f4;
+  padding-top: 10px;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.track-view-btn {
+  color: #1a73e8;
+  font-size: 13px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.track-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.track-pagination button {
+  padding: 6px 12px;
+  border: 1px solid #dadce0;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #3c4043;
+}
+
+.track-pagination button.active {
+  background: #1a73e8;
+  color: white;
+  border-color: #1a73e8;
+}
+
+.track-pagination button:disabled { opacity: 0.4; cursor: default; }
+
+.track-info-box {
+  background: #e8f0fe;
+  border: 1px solid #c5d8fb;
+  border-radius: 10px;
+  padding: 18px 22px;
+  font-size: 14px;
+  color: #1a3c6e;
+}
+
+.track-info-box h3 { margin: 0 0 10px; font-size: 15px; }
+.track-info-box ul { margin: 0; padding-left: 20px; line-height: 1.8; }
+
+.track-empty {
+  text-align: center;
+  padding: 48px 24px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 10px;
+  color: #5f6368;
+  margin-bottom: 24px;
+}
+
+.track-empty button {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}

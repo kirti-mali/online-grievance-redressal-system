@@ -1,0 +1,146 @@
+.dark-mode-toggle {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .card,
+body.dark-mode .modal-content,
+body.dark-mode .auth-card {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+body.dark-mode .table {
+  color: #e0e0e0;
+  background-color: #2d2d2d;
+}
+
+body.dark-mode .table-light {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #3a3a3a;
+  color: #e0e0e0;
+  border-color: #505050;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+  background-color: #404040;
+  color: #e0e0e0;
+  border-color: #667eea;
+}
+
+body.dark-mode .btn-secondary {
+  background-color: #404040;
+  border-color: #505050;
+  color: #e0e0e0;
+}
+
+body.dark-mode .btn-secondary:hover {
+  background-color: #505050;
+}
+
+body.dark-mode .alert {
+  background-color: #3a3a3a;
+  border-color: #505050;
+  color: #e0e0e0;
+}
+
+body.dark-mode .navbar-custom {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+}
+
+body.dark-mode .footer {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+  color: #e0e0e0;
+}
+
+body.dark-mode .text-muted {
+  color: #a0a0a0 !important;
+}
+
+body.dark-mode .hero-section {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+body.dark-mode .feature-card,
+body.dark-mode .role-card,
+body.dark-mode .stat-box {
+  background-color: #2d2d2d;
+  border-color: #404040;
+}
+
+body.dark-mode .feature-card:hover,
+body.dark-mode .role-card:hover {
+  background-color: #3a3a3a;
+}
+
+body.dark-mode .timeline-entry {
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .bar-wrapper {
+  background: #3a3a3a;
+}
+
+body.dark-mode .info-table td {
+  border-bottom-color: #404040;
+}
+
+body.dark-mode .description-box,
+body.dark-mode .resolution-box {
+  background-color: #3a3a3a;
+}
+
+@media (max-width: 768px) {
+  .dark-mode-toggle {
+    bottom: 1rem;
+    right: 1rem;
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+}

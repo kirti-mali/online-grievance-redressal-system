@@ -1,174 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import * as grievanceService from '../../services/grievanceService';
 import * as categoryService from '../../services/categoryService';
+import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'react-toastify';
+
+const inp = { width: '100%', padding: '10px 12px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' };
+const lbl = { display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#3c4043' };
 
 const RaiseGrievance = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category_id: '',
-    priority: 'medium'
-  });
+  const [files, setFiles] = useState([]);
+  const [form, setForm] = useState({ title: '', description: '', category_id: '', priority: 'medium' });
 
-  React.useEffect(() => {
-    loadCategories();
+  useEffect(() => {
+    categoryService.getAllCategories()
+      .then(r => setCategories(r.data.data || []))
+      .catch(() => {});
   }, []);
 
-  const loadCategories = async () => {
-    try {
-      const response = await categoryService.getAllCategories();
-      setCategories(response.data.data);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleFileChange = e => {
+    const selected = Array.from(e.target.files);
+    const valid = selected.filter(f => f.size <= 10 * 1024 * 1024);
+    if (valid.length < selected.length) toast.warn('Some files exceed 10MB and were skipped');
+    setFiles(prev => [...prev, ...valid]);
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const removeFile = (i) => setFiles(files.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.title || !form.description || !form.category_id) {
+      return toast.error('Please fill all required fields');
+    }
     setLoading(true);
-
     try {
-      await grievanceService.createGrievance(formData);
-      toast.success('Grievance filed successfully');
+      const res = await grievanceService.createGrievance(form);
+      const grievanceId = res.data.grievance.id;
+
+      // Upload documents if any
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+          await grievanceService.uploadDocument(grievanceId, fd);
+        } catch {
+          toast.warn(`Could not upload ${file.name}`);
+        }
+      }
+
+      toast.success(`Grievance filed! Ticket ID: #${grievanceId}`);
       navigate('/citizen/my-grievances');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to file grievance');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to file grievance');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role="citizen" />
-        <main style={{ flex: 1, padding: '2rem' }}>
-          <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-            <h1>Raise a New Grievance</h1>
+    <RedesignedMainLayout role="citizen">
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ marginBottom: '24px', borderBottom: '2px solid #dadce0', paddingBottom: '20px' }}>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 500 }}>➕ {t('fileGrievance')}</h1>
+          <p style={{ margin: '4px 0 0', color: '#5f6368', fontSize: '14px' }}>Describe your issue clearly. You'll receive a unique Ticket ID.</p>
+        </div>
 
-            <div style={styles.card}>
-              <form onSubmit={handleSubmit}>
-                <div style={styles.formGroup}>
-                  <label>Title</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    required
-                    placeholder="Brief title of your grievance"
-                  />
-                </div>
+        <form onSubmit={handleSubmit} style={{ background: 'white', border: '1px solid #dadce0', borderRadius: '8px', padding: '28px' }}>
 
-                <div style={styles.formGroup}>
-                  <label>Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                    placeholder="Detailed description of the issue"
-                    rows="6"
-                  ></textarea>
-                </div>
+          <div style={{ marginBottom: '18px' }}>
+            <label style={lbl}>{t('title')} *</label>
+            <input name="title" value={form.title} onChange={handleChange} required
+              placeholder="Brief title of your grievance" style={inp} />
+          </div>
 
-                <div style={styles.formRow}>
-                  <div style={styles.formGroup}>
-                    <label>Category</label>
-                    <select
-                      name="category_id"
-                      value={formData.category_id}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Category</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+          <div style={{ marginBottom: '18px' }}>
+            <label style={lbl}>{t('description')} *</label>
+            <textarea name="description" value={form.description} onChange={handleChange} required
+              placeholder="Detailed description of the issue..." rows={5}
+              style={{ ...inp, resize: 'vertical' }} />
+          </div>
 
-                  <div style={styles.formGroup}>
-                    <label>Priority</label>
-                    <select
-                      name="priority"
-                      value={formData.priority}
-                      onChange={handleChange}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={styles.buttonGroup}>
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
-                    {loading ? 'Submitting...' : 'Submit Grievance'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => navigate(-1)}
-                    style={{ background: '#95a5a6', color: 'white' }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '18px' }}>
+            <div>
+              <label style={lbl}>{t('category')} *</label>
+              <select name="category_id" value={form.category_id} onChange={handleChange} required style={inp}>
+                <option value="">Select Category</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={lbl}>{t('priority')}</label>
+              <select name="priority" value={form.priority} onChange={handleChange} style={inp}>
+                <option value="low">{t('low')}</option>
+                <option value="medium">{t('medium')}</option>
+                <option value="high">{t('high')}</option>
+              </select>
             </div>
           </div>
-        </main>
-      </div>
-      <Footer />
-    </>
-  );
-};
 
-const styles = {
-  card: {
-    background: 'white',
-    padding: '2rem',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    marginTop: '2rem'
-  },
-  formGroup: {
-    marginBottom: '1.5rem'
-  },
-  formRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1rem'
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '2rem'
-  }
+          {/* Document Upload */}
+          <div style={{ marginBottom: '24px' }}>
+            <label style={lbl}>📎 {t('uploadDoc')} (PDF, JPG, PNG, DOC — max 10MB each)</label>
+            <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
+              onChange={handleFileChange}
+              style={{ ...inp, padding: '8px', cursor: 'pointer' }} />
+            {files.length > 0 && (
+              <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {files.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f9fa', padding: '8px 12px', borderRadius: '6px', fontSize: '13px' }}>
+                    <span>📄 {f.name} <span style={{ color: '#9aa0a6' }}>({(f.size / 1024).toFixed(1)} KB)</span></span>
+                    <button type="button" onClick={() => removeFile(i)}
+                      style={{ background: 'none', border: 'none', color: '#e53935', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="submit" disabled={loading}
+              style={{ background: '#1a73e8', color: 'white', border: 'none', borderRadius: '6px', padding: '11px 28px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
+              {loading ? t('submitting') : t('submitGrievance')}
+            </button>
+            <button type="button" onClick={() => navigate(-1)}
+              style={{ background: 'transparent', color: '#5f6368', border: '1px solid #dadce0', borderRadius: '6px', padding: '11px 20px', fontSize: '15px', cursor: 'pointer' }}>
+              {t('cancel')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </RedesignedMainLayout>
+  );
 };
 
 export default RaiseGrievance;

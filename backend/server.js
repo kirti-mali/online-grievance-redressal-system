@@ -7,7 +7,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost:3001'],
   credentials: true
 }));
 app.use(express.json());
@@ -28,14 +28,14 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/grievances', require('./routes/grievanceRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/resolutions', require('./routes/resolutionRoutes'));
-
-// New operational routes
 app.use('/api/comments', require('./routes/commentRoutes'));
 app.use('/api/escalations', require('./routes/escalationRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/status-history', require('./routes/statusHistoryRoutes'));
 app.use('/api/documents', require('./routes/documentRoutes'));
+const complaintRoutes = require('./routes/complaintRoutes');
+app.use('/api/complaints', complaintRoutes);
 
 // Static files for uploads
 const path = require('path');

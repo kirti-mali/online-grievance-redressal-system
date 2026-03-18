@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Pagination from '../../components/Pagination';
 import * as grievanceService from '../../services/grievanceService';
@@ -33,12 +31,8 @@ const MyGrievances = () => {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role="citizen" />
-        <main style={{ flex: 1, padding: '2rem' }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <RedesignedMainLayout role="citizen">
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={styles.header}>
               <h1>My Grievances</h1>
               <Link to="/citizen/raise-grievance" className="btn btn-primary">
@@ -90,11 +84,8 @@ const MyGrievances = () => {
                 <Pagination page={page} pages={totalPages} onPageChange={setPage} />
               </>
             )}
-          </div>
-        </main>
-      </div>
-      <Footer />
-    </>
+        </div>
+    </RedesignedMainLayout>
   );
 };
 

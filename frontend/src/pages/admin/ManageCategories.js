@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Modal, Form, InputGroup, Row, Col, Card, Pagination, Badge } from 'react-bootstrap';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
-import Sidebar from '../../components/Sidebar';
 import * as categoryService from '../../services/categoryService';
+import RedesignedMainLayout from '../../layouts/RedesignedMainLayout';
 
 const ManageCategories = () => {
   // Mock data until API is fully integrated
@@ -111,156 +109,139 @@ const ManageCategories = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div style={{ display: 'flex' }}>
-        <Sidebar role="admin" />
-        <main style={{ flex: 1 }}>
-          <Container fluid className="py-4">
-            <Row className="mb-4 align-items-center">
-              <Col>
-                <h2 className="mb-2">📁 Manage Categories</h2>
-                <p className="text-muted">Create and manage grievance categories</p>
-              </Col>
-              <Col xs="auto">
-                <Button variant="success" onClick={handleAddClick}>
-                  ➕ Add New Category
-                </Button>
-              </Col>
-            </Row>
+    <RedesignedMainLayout>
+      <Container fluid className="py-4">
+        <div style={{ marginBottom: '32px', borderBottom: '2px solid #dadce0', paddingBottom: '24px' }}>
+          <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 500 }}>📁 Manage Categories</h1>
+          <p style={{ margin: 0, color: '#5f6368', fontSize: '14px' }}>Create and manage grievance categories</p>
+        </div>
+        <div className="mb-4">
+          <Button variant="success" onClick={handleAddClick}>
+            ➕ Add New Category
+          </Button>
+        </div>
 
-            {message.text && (
-              <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
-                {message.text}
-                <button type="button" className="btn-close" onClick={() => setMessage({ type: '', text: '' })}></button>
-              </div>
-            )}
+        {message.text && (
+          <div className={`alert alert-${message.type} alert-dismissible fade show`} role="alert">
+            {message.text}
+            <button type="button" className="btn-close" onClick={() => setMessage({ type: '', text: '' })}></button>
+          </div>
+        )}
 
-            <Card className="mb-4">
-              <Card.Body>
-                <InputGroup>
-                  <InputGroup.Text>🔍</InputGroup.Text>
-                  <Form.Control
-                    placeholder="Search by category name or description..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </InputGroup>
-              </Card.Body>
-            </Card>
+        <Card className="mb-4">
+          <Card.Body>
+            <InputGroup>
+              <InputGroup.Text>🔍</InputGroup.Text>
+              <Form.Control
+                placeholder="Search by category name or description..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </InputGroup>
+          </Card.Body>
+        </Card>
 
-            <Card className="shadow-sm">
-              <Card.Body className="p-0">
-                <Table hover responsive className="mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Description</th>
-                      <th className="text-center">Grievances</th>
-                      <th className="text-center">Actions</th>
+        <Card className="shadow-sm">
+          <Card.Body className="p-0">
+            <Table hover responsive className="mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th className="text-center">Grievances</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4">Loading...</td>
+                  </tr>
+                ) : paginatedCategories.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">No categories found</td>
+                  </tr>
+                ) : (
+                  paginatedCategories.map(category => (
+                    <tr key={category.id}>
+                      <td className="fw-bold">{category.id}</td>
+                      <td><strong>{category.name}</strong></td>
+                      <td>{category.description}</td>
+                      <td className="text-center">
+                        <Badge bg="info">{category.grievance_count}</Badge>
+                      </td>
+                      <td className="text-center">
+                        <Button variant="primary" size="sm" className="me-2" onClick={() => handleEditClick(category)}>
+                          ✏️ Edit
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => handleDeleteClick(category.id)}>
+                          🗑️ Delete
+                        </Button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="5" className="text-center py-4">Loading...</td>
-                      </tr>
-                    ) : paginatedCategories.length === 0 ? (
-                      <tr>
-                        <td colSpan="5" className="text-center py-4 text-muted">No categories found</td>
-                      </tr>
-                    ) : (
-                      paginatedCategories.map(category => (
-                        <tr key={category.id}>
-                          <td className="fw-bold">{category.id}</td>
-                          <td><strong>{category.name}</strong></td>
-                          <td>{category.description}</td>
-                          <td className="text-center">
-                            <Badge bg="info">{category.grievance_count}</Badge>
-                          </td>
-                          <td className="text-center">
-                            <Button variant="primary" size="sm" className="me-2" onClick={() => handleEditClick(category)}>
-                              ✏️ Edit
-                            </Button>
-                            <Button variant="danger" size="sm" onClick={() => handleDeleteClick(category.id)}>
-                              🗑️ Delete
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </Card.Body>
-            </Card>
+                  ))
+                )}
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
 
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center mt-4">
-                <Pagination>
-                  <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
-                  <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
-                      {page}
-                    </Pagination.Item>
-                  ))}
-                  <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
-                  <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
-                </Pagination>
-              </div>
-            )}
-          </Container>
-        </main>
-      </div>
+        <Pagination className="justify-content-center mt-4">
+          <Pagination.First onClick={() => setCurrentPage(1)} disabled={currentPage === 1} />
+          <Pagination.Prev onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} />
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <Pagination.Item key={page} active={page === currentPage} onClick={() => setCurrentPage(page)}>
+              {page}
+            </Pagination.Item>
+          ))}
+          <Pagination.Next onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} />
+          <Pagination.Last onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} />
+        </Pagination>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalMode === 'add' ? '➕ Add New Category' : '✏️ Edit Category'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label><strong>Category Name *</strong></Form.Label>
-              <Form.Control
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleFormChange}
-                placeholder="e.g., Water Supply"
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label><strong>Description</strong></Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                name="description"
-                value={formData.description}
-                onChange={handleFormChange}
-                placeholder="Enter category description..."
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {modalMode === 'add' ? 'Add Category' : 'Update Category'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Footer />
-    </>
+        <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {modalMode === 'add' ? '➕ Add New Category' : '✏️ Edit Category'}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Category Name *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleFormChange}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  name="description"
+                  value={formData.description}
+                  onChange={handleFormChange}
+                />
+              </Form.Group>
+            </Form>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Close
+            </Button>
+            <Button variant="primary" onClick={handleSave}>
+              Save Changes
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </RedesignedMainLayout>
   );
 };
 

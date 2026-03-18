@@ -35,7 +35,7 @@ exports.getStatusHistory = async (req, res) => {
 
       res.json({
         success: true,
-        history
+        data: history
       });
     } finally {
       conn.release();

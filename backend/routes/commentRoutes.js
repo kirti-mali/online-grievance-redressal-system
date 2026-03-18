@@ -8,10 +8,10 @@ const { validateComment } = require('../middleware/validation');
 router.use(authenticateToken);
 
 // Get comments for grievance
-router.get('/:grievance_id', commentController.getComments);
+router.get('/grievance/:grievance_id', commentController.getComments);
 
 // Add comment to grievance
-router.post('/:grievance_id', validateComment, commentController.addComment);
+router.post('/grievance/:grievance_id', validateComment, commentController.addComment);
 
 // Update specific comment
 router.put('/:comment_id', validateComment, commentController.updateComment);
